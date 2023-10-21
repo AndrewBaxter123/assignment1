@@ -10,8 +10,8 @@
     "cdk": "cdk"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.93",
-    "@types/node": "20.4.2",
+    "@types/aws-lambda": "^8.10.125",
+    "@types/node": "^20.4.2",
     "aws-cdk": "2.88.0",
     "esbuild": "^0.18.17",
     "ts-node": "^10.9.1",
