@@ -160,23 +160,18 @@ export class RestAPIStack extends cdk.Stack {
       "POST",
       new apig.LambdaIntegration(newMovieFn, { proxy: true })
     );
-  
-    moviesEndpoint.addMethod(
-      "DELETE", 
+    movieEndpoint.addMethod(
+      "DELETE",
       new apig.LambdaIntegration(removeMovieFn, { proxy: true })
     );
     
-    
-
-    
-        
-        
-
     // Permissions 
     moviesTable.grantReadData(getMovieByIdFn)
     moviesTable.grantReadData(getAllMoviesFn)
     moviesTable.grantReadWriteData(newMovieFn)
     movieCastsTable.grantReadData(getMovieCastMembersFn);
+    moviesTable.grantReadWriteData(removeMovieFn);
+
       }
     }
     
