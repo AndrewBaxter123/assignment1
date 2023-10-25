@@ -13,7 +13,7 @@ const ajv = new Ajv();
 const isValidQueryParams = ajv.compile(
   schema.definitions["MovieCastMemberQueryParams"] || {}
 );
- 
+
 const ddbDocClient = createDocumentClient();
 
 export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
@@ -41,7 +41,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
         }),
       };
     }
-    
+
     // const parameters = event.queryStringParameters;
     const movieId = parseInt(queryParams.movieId);
     let commandInput: QueryCommandInput = {
@@ -75,12 +75,12 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
         },
       };
     }
-    
+
     // const ddbDocClient = createDocumentClient();
     const commandOutput = await ddbDocClient.send(
       new QueryCommand(commandInput)
       );
-      
+
       return {
         statusCode: 200,
         headers: {
@@ -101,7 +101,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
       };
     }
   };
-  
+
   function createDocumentClient() {
     const ddbClient = new DynamoDBClient({ region: process.env.REGION });
     const marshallOptions = {

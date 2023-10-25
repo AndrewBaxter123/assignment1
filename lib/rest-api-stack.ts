@@ -79,22 +79,21 @@ export class RestAPIStack extends cdk.Stack {
             REGION: "eu-west-1",
           },
         });
-        //  Functions .....
-    const getMovieCastMembersFn = new lambdanode.NodejsFunction(
-      this,
-      "GetCastMemberFn",
-      {
-        architecture: lambda.Architecture.ARM_64,
-        runtime: lambda.Runtime.NODEJS_16_X,
-        entry: `${__dirname}/../lambdas/getMovieCastMember.ts`,
-        timeout: cdk.Duration.seconds(10),
-        memorySize: 128,
-        environment: {
-          TABLE_NAME: movieCastsTable.tableName,
-          REGION: "eu-west-1",
-        },
-      }
-    );
+        const getMovieCastMembersFn = new lambdanode.NodejsFunction(
+          this,
+          "GetCastMemberFn",
+          {
+            architecture: lambda.Architecture.ARM_64,
+            runtime: lambda.Runtime.NODEJS_16_X,
+            entry: `${__dirname}/../lambdas/getMovieCastMember.ts`,
+            timeout: cdk.Duration.seconds(10),
+            memorySize: 128,
+            environment: {
+              TABLE_NAME: movieCastsTable.tableName,
+              REGION: "eu-west-1",
+            },
+          }
+        );
 
         const removeMovieFn = new lambdanode.NodejsFunction(this, "DeleteMovieFn", {
           architecture: lambda.Architecture.ARM_64,
@@ -163,6 +162,11 @@ export class RestAPIStack extends cdk.Stack {
     movieEndpoint.addMethod(
       "DELETE",
       new apig.LambdaIntegration(removeMovieFn, { proxy: true })
+    );
+    const movieCastEndpoint = moviesEndpoint.addResource("cast");
+    movieCastEndpoint.addMethod(
+      "GET",
+      new apig.LambdaIntegration(getMovieCastMembersFn, { proxy: true })
     );
     
     // Permissions 
