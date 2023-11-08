@@ -21,6 +21,21 @@ export class RestAPIStack extends cdk.Stack {
       tableName: "Reviews",
     });
 
+    reviewsTable.addGlobalSecondaryIndex({
+      indexName: "ReviewerIndex",
+      partitionKey: {
+        name: "reviewer", //attribute to be used as the partition key for Secondary index
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: "year", // sort by year
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL 
+    });
+    
+    
+
     const moviesTable = new dynamodb.Table(this, "MoviesTable", {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       partitionKey: { name: "movieId", type: dynamodb.AttributeType.NUMBER },
@@ -44,6 +59,18 @@ export class RestAPIStack extends cdk.Stack {
     
     // Functions 
 
+    const getReviewByReviewerFn = new lambdanode.NodejsFunction(this, "GetReviewByReviewerFn", {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_16_X,
+      entry: `${__dirname}/../lambdas/getReviewByReviewer.ts`, // path to your lambda file
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        REVIEWS_TABLE_NAME: reviewsTable.tableName,
+        REGION: 'eu-west-1',
+      },
+    });
+
     const getMovieReviewsFn = new lambdanode.NodejsFunction(this, "GetMovieReviewsFn", {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_16_X,
@@ -51,7 +78,7 @@ export class RestAPIStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
       environment: {
-        TABLE_NAME: reviewsTable.tableName,
+        REVIEWS_TABLE_NAME: reviewsTable.tableName,
         REGION: 'eu-west-1',
       },
      });
@@ -70,76 +97,76 @@ export class RestAPIStack extends cdk.Stack {
     });
 
 
-    const getMovieByIdFn = new lambdanode.NodejsFunction(
-      this,
-      "GetMovieByIdFn",
-      {
-        architecture: lambda.Architecture.ARM_64,
-        runtime: lambda.Runtime.NODEJS_16_X,
-        entry: `${__dirname}/../lambdas/getMovieById.ts`,
-        timeout: cdk.Duration.seconds(10),
-        memorySize: 128,
-        environment: {
-          TABLE_NAME: moviesTable.tableName,
-          REGION: 'eu-west-1',
-        },
-      }
-      );
+    // const getMovieByIdFn = new lambdanode.NodejsFunction(
+    //   this,
+    //   "GetMovieByIdFn",
+    //   {
+    //     architecture: lambda.Architecture.ARM_64,
+    //     runtime: lambda.Runtime.NODEJS_16_X,
+    //     entry: `${__dirname}/../lambdas/getMovieById.ts`,
+    //     timeout: cdk.Duration.seconds(10),
+    //     memorySize: 128,
+    //     environment: {
+    //       TABLE_NAME: moviesTable.tableName,
+    //       REGION: 'eu-west-1',
+    //     },
+    //   }
+    //   );
       
-      const getAllMoviesFn = new lambdanode.NodejsFunction(
-        this,
-        "GetAllMoviesFn",
-        {
-          architecture: lambda.Architecture.ARM_64,
-          runtime: lambda.Runtime.NODEJS_16_X,
-          entry: `${__dirname}/../lambdas/getAllMovies.ts`,
-          timeout: cdk.Duration.seconds(10),
-          memorySize: 128,
-          environment: {
-            TABLE_NAME: moviesTable.tableName,
-            REGION: 'eu-west-1',
-          },
-        }
-        );
+    //   const getAllMoviesFn = new lambdanode.NodejsFunction(
+    //     this,
+    //     "GetAllMoviesFn",
+    //     {
+    //       architecture: lambda.Architecture.ARM_64,
+    //       runtime: lambda.Runtime.NODEJS_16_X,
+    //       entry: `${__dirname}/../lambdas/getAllMovies.ts`,
+    //       timeout: cdk.Duration.seconds(10),
+    //       memorySize: 128,
+    //       environment: {
+    //         TABLE_NAME: moviesTable.tableName,
+    //         REGION: 'eu-west-1',
+    //       },
+    //     }
+    //     );
 
-        const newMovieFn = new lambdanode.NodejsFunction(this, "AddMovieFn", {
-          architecture: lambda.Architecture.ARM_64,
-          runtime: lambda.Runtime.NODEJS_16_X,
-          entry: `${__dirname}/../lambdas/addMovie.ts`,
-          timeout: cdk.Duration.seconds(10),
-          memorySize: 128,
-          environment: {
-            TABLE_NAME: moviesTable.tableName,
-            REGION: "eu-west-1",
-          },
-        });
-        const getMovieCastMembersFn = new lambdanode.NodejsFunction(
-          this,
-          "GetCastMemberFn",
-          {
-            architecture: lambda.Architecture.ARM_64,
-            runtime: lambda.Runtime.NODEJS_16_X,
-            entry: `${__dirname}/../lambdas/getMovieCastMember.ts`,
-            timeout: cdk.Duration.seconds(10),
-            memorySize: 128,
-            environment: {
-              TABLE_NAME: movieCastsTable.tableName,
-              REGION: "eu-west-1",
-            },
-          }
-        );
+    //     const newMovieFn = new lambdanode.NodejsFunction(this, "AddMovieFn", {
+    //       architecture: lambda.Architecture.ARM_64,
+    //       runtime: lambda.Runtime.NODEJS_16_X,
+    //       entry: `${__dirname}/../lambdas/addMovie.ts`,
+    //       timeout: cdk.Duration.seconds(10),
+    //       memorySize: 128,
+    //       environment: {
+    //         TABLE_NAME: moviesTable.tableName,
+    //         REGION: "eu-west-1",
+    //       },
+    //     });
+    //     const getMovieCastMembersFn = new lambdanode.NodejsFunction(
+    //       this,
+    //       "GetCastMemberFn",
+    //       {
+    //         architecture: lambda.Architecture.ARM_64,
+    //         runtime: lambda.Runtime.NODEJS_16_X,
+    //         entry: `${__dirname}/../lambdas/getMovieCastMember.ts`,
+    //         timeout: cdk.Duration.seconds(10),
+    //         memorySize: 128,
+    //         environment: {
+    //           TABLE_NAME: movieCastsTable.tableName,
+    //           REGION: "eu-west-1",
+    //         },
+    //       }
+    //     );
 
-        const removeMovieFn = new lambdanode.NodejsFunction(this, "DeleteMovieFn", {
-          architecture: lambda.Architecture.ARM_64,
-          runtime: lambda.Runtime.NODEJS_16_X,
-          entry: `${__dirname}/../lambdas/deleteMovie.ts`,
-          timeout: cdk.Duration.seconds(10),
-          memorySize: 128,
-          environment: {
-            TABLE_NAME: moviesTable.tableName,
-            REGION: "eu-west-1",
-          },
-        });
+    //     const removeMovieFn = new lambdanode.NodejsFunction(this, "DeleteMovieFn", {
+    //       architecture: lambda.Architecture.ARM_64,
+    //       runtime: lambda.Runtime.NODEJS_16_X,
+    //       entry: `${__dirname}/../lambdas/deleteMovie.ts`,
+    //       timeout: cdk.Duration.seconds(10),
+    //       memorySize: 128,
+    //       environment: {
+    //         TABLE_NAME: moviesTable.tableName,
+    //         REGION: "eu-west-1",
+    //       },
+    //     });
 
       
         
@@ -178,30 +205,30 @@ export class RestAPIStack extends cdk.Stack {
     });
 
     const moviesEndpoint = api.root.addResource("movies");
-    moviesEndpoint.addMethod(
-      "GET",
-      new apig.LambdaIntegration(getAllMoviesFn, { proxy: true })
-    );
+    // moviesEndpoint.addMethod(
+    //   "GET",
+    //   new apig.LambdaIntegration(getAllMoviesFn, { proxy: true })
+    // );
 
-    const movieEndpoint = moviesEndpoint.addResource("{movieId}");
-    movieEndpoint.addMethod(
-      "GET",
-      new apig.LambdaIntegration(getMovieByIdFn, { proxy: true })
-    );
-    // NEW
-    moviesEndpoint.addMethod(
-      "POST",
-      new apig.LambdaIntegration(newMovieFn, { proxy: true })
-    );
-    movieEndpoint.addMethod(
-      "DELETE",
-      new apig.LambdaIntegration(removeMovieFn, { proxy: true })
-    );
-    const movieCastEndpoint = moviesEndpoint.addResource("cast");
-    movieCastEndpoint.addMethod(
-      "GET",
-      new apig.LambdaIntegration(getMovieCastMembersFn, { proxy: true })
-    );
+     const movieEndpoint = moviesEndpoint.addResource("{movieId}");
+    // movieEndpoint.addMethod(
+    //   "GET",
+    //   new apig.LambdaIntegration(getMovieByIdFn, { proxy: true })
+    // );
+    // // NEW
+    // moviesEndpoint.addMethod(
+    //   "POST",
+    //   new apig.LambdaIntegration(newMovieFn, { proxy: true })
+    // );
+    // movieEndpoint.addMethod(
+    //   "DELETE",
+    //   new apig.LambdaIntegration(removeMovieFn, { proxy: true })
+    // );
+    // const movieCastEndpoint = moviesEndpoint.addResource("cast");
+    // movieCastEndpoint.addMethod(
+    //   "GET",
+    //   new apig.LambdaIntegration(getMovieCastMembersFn, { proxy: true })
+    // );
     const reviewsEndpoint = moviesEndpoint.addResource("reviews")
     reviewsEndpoint.addMethod(
       "POST", 
@@ -212,17 +239,25 @@ export class RestAPIStack extends cdk.Stack {
       "GET",
       new apig.LambdaIntegration(getMovieReviewsFn, { proxy: true }));
 
+      const reviewerReviewsEndpoint = reviewsEndpoint.addResource("{reviewer}");
+
+reviewerReviewsEndpoint.addMethod(
+  "GET",
+  new apig.LambdaIntegration(getReviewByReviewerFn, { proxy: true })
+);
+
     
     // Permissions 
+    reviewsTable.grantReadData(getReviewByReviewerFn);
     reviewsTable.grantWriteData(addMovieReviewFn);
     reviewsTable.grantReadData(getMovieReviewsFn)
-    moviesTable.grantReadData(getMovieByIdFn)
-    moviesTable.grantReadData(getAllMoviesFn)
-    moviesTable.grantReadWriteData(newMovieFn)
+    // moviesTable.grantReadData(getMovieByIdFn)
+    // moviesTable.grantReadData(getAllMoviesFn)
+    // moviesTable.grantReadWriteData(newMovieFn)
     
-    movieCastsTable.grantReadData(getMovieCastMembersFn);
-    moviesTable.grantReadWriteData(removeMovieFn);
-    movieCastsTable.grantReadWriteData(getMovieByIdFn);
+    // movieCastsTable.grantReadData(getMovieCastMembersFn);
+    // moviesTable.grantReadWriteData(removeMovieFn);
+    // movieCastsTable.grantReadWriteData(getMovieByIdFn);
 
       }
     }

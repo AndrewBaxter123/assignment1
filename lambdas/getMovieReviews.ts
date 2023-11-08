@@ -34,7 +34,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
     // Use the parsed movieId to query DynamoDB.
     const commandOutput = await ddbDocClient.send(
       new QueryCommand({
-        TableName: process.env.TABLE_NAME,
+        TableName: process.env.REVIEWS_TABLE_NAME,
         KeyConditionExpression: "movieId = :movieId",
         ExpressionAttributeValues: {
           ":movieId": movieId,

@@ -27,9 +27,9 @@ export type Movie = {
 
   export type Review = {
     movieId: number; // ID of the movie that the review is for
-    userName: string; // Name of the user who wrote the review
+    reviewer: string; // Name of the user who wrote the review
     rating: number; // Rating given by the user
     reviewText: string; //review text
-    year: string; // the year of when the review was written
+    reviewDate: string; // the date of when the review was written
   };
   
