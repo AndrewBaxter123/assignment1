@@ -24,3 +24,14 @@ export type Movie = {
     actorName?: string;
     roleName?: string
   }
+
+  export type Review = {
+    reviewId: string; // id for the review
+    movieId: number; // ID of the movie that the review is for
+    //userId: string; // 
+    userName: string; // Name of the user who wrote the review
+    rating: number; // Rating given by the user
+    reviewText: string; //review text
+    year: string; // the year of when the review was written
+  };
+  
