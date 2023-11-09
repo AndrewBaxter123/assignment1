@@ -49,6 +49,18 @@ export class RestAPIStack extends cdk.Stack {
     
     // Functions 
 
+    const updateReviewFn = new lambdanode.NodejsFunction(this, 'UpdateReviewFn', {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_16_X,
+      entry: `${__dirname}/../lambdas/updateReview.ts`, // path to your new Lambda file
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        REVIEWS_TABLE_NAME: reviewsTable.tableName,
+        REGION: 'eu-west-1',
+      },
+    });
+
     const getReviewByReviewerFn = new lambdanode.NodejsFunction(this, "GetReviewByReviewerFn", {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_16_X,
@@ -85,80 +97,7 @@ export class RestAPIStack extends cdk.Stack {
         REGION: 'eu-west-1',
       },
     });
-
-
-    // const getMovieByIdFn = new lambdanode.NodejsFunction(
-    //   this,
-    //   "GetMovieByIdFn",
-    //   {
-    //     architecture: lambda.Architecture.ARM_64,
-    //     runtime: lambda.Runtime.NODEJS_16_X,
-    //     entry: `${__dirname}/../lambdas/getMovieById.ts`,
-    //     timeout: cdk.Duration.seconds(10),
-    //     memorySize: 128,
-    //     environment: {
-    //       TABLE_NAME: moviesTable.tableName,
-    //       REGION: 'eu-west-1',
-    //     },
-    //   }
-    //   );
-      
-    //   const getAllMoviesFn = new lambdanode.NodejsFunction(
-    //     this,
-    //     "GetAllMoviesFn",
-    //     {
-    //       architecture: lambda.Architecture.ARM_64,
-    //       runtime: lambda.Runtime.NODEJS_16_X,
-    //       entry: `${__dirname}/../lambdas/getAllMovies.ts`,
-    //       timeout: cdk.Duration.seconds(10),
-    //       memorySize: 128,
-    //       environment: {
-    //         TABLE_NAME: moviesTable.tableName,
-    //         REGION: 'eu-west-1',
-    //       },
-    //     }
-    //     );
-
-    //     const newMovieFn = new lambdanode.NodejsFunction(this, "AddMovieFn", {
-    //       architecture: lambda.Architecture.ARM_64,
-    //       runtime: lambda.Runtime.NODEJS_16_X,
-    //       entry: `${__dirname}/../lambdas/addMovie.ts`,
-    //       timeout: cdk.Duration.seconds(10),
-    //       memorySize: 128,
-    //       environment: {
-    //         TABLE_NAME: moviesTable.tableName,
-    //         REGION: "eu-west-1",
-    //       },
-    //     });
-    //     const getMovieCastMembersFn = new lambdanode.NodejsFunction(
-    //       this,
-    //       "GetCastMemberFn",
-    //       {
-    //         architecture: lambda.Architecture.ARM_64,
-    //         runtime: lambda.Runtime.NODEJS_16_X,
-    //         entry: `${__dirname}/../lambdas/getMovieCastMember.ts`,
-    //         timeout: cdk.Duration.seconds(10),
-    //         memorySize: 128,
-    //         environment: {
-    //           TABLE_NAME: movieCastsTable.tableName,
-    //           REGION: "eu-west-1",
-    //         },
-    //       }
-    //     );
-
-    //     const removeMovieFn = new lambdanode.NodejsFunction(this, "DeleteMovieFn", {
-    //       architecture: lambda.Architecture.ARM_64,
-    //       runtime: lambda.Runtime.NODEJS_16_X,
-    //       entry: `${__dirname}/../lambdas/deleteMovie.ts`,
-    //       timeout: cdk.Duration.seconds(10),
-    //       memorySize: 128,
-    //       environment: {
-    //         TABLE_NAME: moviesTable.tableName,
-    //         REGION: "eu-west-1",
-    //       },
-    //     });
-
-      
+    
         
         new custom.AwsCustomResource(this, "moviesddbInitData", {
           onCreate: {
@@ -200,17 +139,20 @@ const moviesEndpoint = api.root.addResource("movies");
 // '/movies/{movieId}' 
 const movieEndpoint = moviesEndpoint.addResource("{movieId}");
 
-// // '/movies/{movieId}/reviews' 
+// '/movies/{movieId}/reviews' 
 const specificReviewsEndpoint = movieEndpoint.addResource("reviews");
 
-// GET method for retrieving all reviews for a specific movie
+// GET all reviews for a specific movie
 specificReviewsEndpoint.addMethod("GET", new apig.LambdaIntegration(getMovieReviewsFn, { proxy: true }));
 
 // '/movies/{movieId}/reviews/{reviewer}'
 const reviewerReviewsEndpoint = specificReviewsEndpoint.addResource("{reviewer}");
 
-// GET method for retrieving reviews for a specific movie by a specific reviewer
+// GET reviews for a specific movie by a specific reviewer
 reviewerReviewsEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewByReviewerFn, { proxy: true }));
+
+// PUT method to update the text of a review for a specific movie by a specific reviewer
+reviewerReviewsEndpoint.addMethod("PUT", new apig.LambdaIntegration(updateReviewFn, { proxy: true }));
 
 // '/movies/reviews' 
 const generalReviewsEndpoint = moviesEndpoint.addResource("reviews");
@@ -224,13 +166,7 @@ generalReviewsEndpoint.addMethod("POST", new apig.LambdaIntegration(addMovieRevi
     reviewsTable.grantReadData(getReviewByReviewerFn);
     reviewsTable.grantWriteData(addMovieReviewFn);
     reviewsTable.grantReadData(getMovieReviewsFn)
-    // moviesTable.grantReadData(getMovieByIdFn)
-    // moviesTable.grantReadData(getAllMoviesFn)
-    // moviesTable.grantReadWriteData(newMovieFn)
-    
-    // movieCastsTable.grantReadData(getMovieCastMembersFn);
-    // moviesTable.grantReadWriteData(removeMovieFn);
-    // movieCastsTable.grantReadWriteData(getMovieByIdFn);
+    reviewsTable.grantWriteData(updateReviewFn);
 
       }
     }

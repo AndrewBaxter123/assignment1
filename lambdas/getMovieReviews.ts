@@ -20,7 +20,6 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
     // Parse movieId to a number.
     const movieId = parseInt(event.pathParameters.movieId);
 
-    // Check if the parsed movieId is a number.
     if (isNaN(movieId)) {
       return {
         statusCode: 400,
@@ -31,7 +30,6 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
       };
     }
 
-    // Use the parsed movieId to query DynamoDB.
     const commandOutput = await ddbDocClient.send(
       new QueryCommand({
         TableName: process.env.REVIEWS_TABLE_NAME,

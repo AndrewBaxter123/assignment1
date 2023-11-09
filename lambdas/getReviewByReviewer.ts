@@ -25,7 +25,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     // debug
     console.log('REVIEWS_TABLE_NAME:', process.env.REVIEWS_TABLE_NAME);
 
-    // Log the query command before sending it
+    // Log the query command before sending it - cloudwatch
     const queryCommand = new QueryCommand({
         TableName: process.env.REVIEWS_TABLE_NAME,
         KeyConditionExpression: 'movieId = :movieId and reviewer = :reviewer',
