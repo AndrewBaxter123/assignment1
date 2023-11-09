@@ -17,22 +17,12 @@ export class RestAPIStack extends cdk.Stack {
     const reviewsTable = new dynamodb.Table(this, "ReviewsTable", {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       partitionKey: { name: "movieId", type: dynamodb.AttributeType.NUMBER },
+      sortKey: { name: "reviewer", type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       tableName: "Reviews",
     });
+    
 
-    reviewsTable.addGlobalSecondaryIndex({
-      indexName: "ReviewerIndex",
-      partitionKey: {
-        name: "reviewer", //attribute to be used as the partition key for Secondary index
-        type: dynamodb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: "year", // sort by year
-        type: dynamodb.AttributeType.STRING,
-      },
-      projectionType: dynamodb.ProjectionType.ALL 
-    });
     
     
 
@@ -204,47 +194,30 @@ export class RestAPIStack extends cdk.Stack {
       },
     });
 
-    const moviesEndpoint = api.root.addResource("movies");
-    // moviesEndpoint.addMethod(
-    //   "GET",
-    //   new apig.LambdaIntegration(getAllMoviesFn, { proxy: true })
-    // );
+    // '/movies' 
+const moviesEndpoint = api.root.addResource("movies");
 
-     const movieEndpoint = moviesEndpoint.addResource("{movieId}");
-    // movieEndpoint.addMethod(
-    //   "GET",
-    //   new apig.LambdaIntegration(getMovieByIdFn, { proxy: true })
-    // );
-    // // NEW
-    // moviesEndpoint.addMethod(
-    //   "POST",
-    //   new apig.LambdaIntegration(newMovieFn, { proxy: true })
-    // );
-    // movieEndpoint.addMethod(
-    //   "DELETE",
-    //   new apig.LambdaIntegration(removeMovieFn, { proxy: true })
-    // );
-    // const movieCastEndpoint = moviesEndpoint.addResource("cast");
-    // movieCastEndpoint.addMethod(
-    //   "GET",
-    //   new apig.LambdaIntegration(getMovieCastMembersFn, { proxy: true })
-    // );
-    const reviewsEndpoint = moviesEndpoint.addResource("reviews")
-    reviewsEndpoint.addMethod(
-      "POST", 
-      new apig.LambdaIntegration(addMovieReviewFn, { proxy: true }));
+// '/movies/{movieId}' 
+const movieEndpoint = moviesEndpoint.addResource("{movieId}");
 
-    const reviewEndpoint = movieEndpoint.addResource("reviews")
-    reviewEndpoint.addMethod(
-      "GET",
-      new apig.LambdaIntegration(getMovieReviewsFn, { proxy: true }));
+// // '/movies/{movieId}/reviews' 
+const specificReviewsEndpoint = movieEndpoint.addResource("reviews");
 
-      const reviewerReviewsEndpoint = reviewsEndpoint.addResource("{reviewer}");
+// GET method for retrieving all reviews for a specific movie
+specificReviewsEndpoint.addMethod("GET", new apig.LambdaIntegration(getMovieReviewsFn, { proxy: true }));
 
-reviewerReviewsEndpoint.addMethod(
-  "GET",
-  new apig.LambdaIntegration(getReviewByReviewerFn, { proxy: true })
-);
+// '/movies/{movieId}/reviews/{reviewer}'
+const reviewerReviewsEndpoint = specificReviewsEndpoint.addResource("{reviewer}");
+
+// GET method for retrieving reviews for a specific movie by a specific reviewer
+reviewerReviewsEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewByReviewerFn, { proxy: true }));
+
+// '/movies/reviews' 
+const generalReviewsEndpoint = moviesEndpoint.addResource("reviews");
+
+// POST method for adding a new review in general
+generalReviewsEndpoint.addMethod("POST", new apig.LambdaIntegration(addMovieReviewFn, { proxy: true }));
+
 
     
     // Permissions 

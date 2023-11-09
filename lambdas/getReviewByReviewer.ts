@@ -5,34 +5,37 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 const ddbDocClient = createDDbDocClient();
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-  // Log the incoming event for debugging
-  console.log('Received event:', JSON.stringify(event, null, 2));
+    console.log('Received event:', JSON.stringify(event, null, 2));
+  
+    try {
 
-  try {
-    const reviewer = event.pathParameters?.reviewer;
-    
-    // Log the reviewer value
-    console.log('Reviewer:', reviewer);
-
-    if (!reviewer) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: "reviewer is required." }),
-      };
-    }
+      const movieId = event.pathParameters?.movieId;
+      const reviewer = event.pathParameters?.reviewer;
+  
+      console.log('Movie ID:', movieId);
+      console.log('Reviewer:', reviewer);
+  
+      if (!movieId || !reviewer) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ message: "movieId and reviewer are required." }),
+        };
+      }
 
     // debug
     console.log('REVIEWS_TABLE_NAME:', process.env.REVIEWS_TABLE_NAME);
 
     // Log the query command before sending it
     const queryCommand = new QueryCommand({
-      TableName: process.env.REVIEWS_TABLE_NAME, 
-      IndexName: 'ReviewerIndex', 
-      KeyConditionExpression: 'reviewer = :reviewer',
-      ExpressionAttributeValues: {
-        ':reviewer': reviewer, 
-      },
-    });
+        TableName: process.env.REVIEWS_TABLE_NAME,
+        KeyConditionExpression: 'movieId = :movieId and reviewer = :reviewer',
+        ExpressionAttributeValues: {
+          ':movieId': parseInt(movieId), 
+          ':reviewer': reviewer,
+        },
+      });
+      
+      
 
     console.log('QueryCommand:', JSON.stringify(queryCommand, null, 2)); //debug
     const results = await ddbDocClient.send(queryCommand);
