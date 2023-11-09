@@ -49,6 +49,18 @@ export class RestAPIStack extends cdk.Stack {
     
     // Functions 
 
+    const getAllReviewsByReviewerFn = new lambdanode.NodejsFunction(this, 'GetAllReviewsByReviewerFn', {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_16_X,
+      entry: `${__dirname}/../lambdas/GetAllReviewsByReviewer.ts`, // path to your new Lambda file
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        REVIEWS_TABLE_NAME: reviewsTable.tableName,
+        REGION: 'eu-west-1',
+      },
+    });
+
     const updateReviewFn = new lambdanode.NodejsFunction(this, 'UpdateReviewFn', {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_16_X,
@@ -157,12 +169,17 @@ reviewerReviewsEndpoint.addMethod("PUT", new apig.LambdaIntegration(updateReview
 // '/movies/reviews' 
 const generalReviewsEndpoint = moviesEndpoint.addResource("reviews");
 
+// GET 'movies/reviews/{reviewer}'
+const reviewerEndpoint = generalReviewsEndpoint.addResource('{reviewer}');
+reviewerEndpoint.addMethod('GET', new apig.LambdaIntegration(getAllReviewsByReviewerFn, {proxy: true}));
+
 // POST method for adding a new review in general
 generalReviewsEndpoint.addMethod("POST", new apig.LambdaIntegration(addMovieReviewFn, { proxy: true }));
 
 
     
     // Permissions 
+    reviewsTable.grantReadData(getAllReviewsByReviewerFn);
     reviewsTable.grantReadData(getReviewByReviewerFn);
     reviewsTable.grantWriteData(addMovieReviewFn);
     reviewsTable.grantReadData(getMovieReviewsFn)
