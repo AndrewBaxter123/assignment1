@@ -3,6 +3,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import Ajv from "ajv";
 import schema from "../shared/types.schema.json";
+import { validateReview } from "../shared/util";
 
 const ajv = new Ajv();
 const isValidBodyParams = ajv.compile(schema.definitions["Review"] || {});
@@ -19,6 +20,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
       if (typeof body !== 'object' || body === null || Array.isArray(body)) {
         throw new Error("Body is not an object");
       }
+      if (!validateReview(body)) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ message: "Invalid review data." }),
+        };
+    }
+
     } else {
       return {
         statusCode: 400, // Bad request status code

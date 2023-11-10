@@ -1,6 +1,7 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { validateReviewText } from "../shared/util";
 
 const ddbDocClient = createDDbDocClient();
 
@@ -13,32 +14,28 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           statusCode: 400,
           body: JSON.stringify({ message: "Missing required path parameters" }),
         };
-      }
+    }
       
-      const movieId = parseInt(event.pathParameters.movieId);
-      const reviewer = event.pathParameters.reviewer;
-      const requestBody = event.body ? JSON.parse(event.body) : undefined;
-          
+    const movieId = parseInt(event.pathParameters.movieId);
+    const reviewer = event.pathParameters.reviewer;
+    const requestBody = event.body ? JSON.parse(event.body) : undefined;
 
     console.log("movieId:", movieId);
-console.log("reviewer:", reviewer);
-console.log("requestBody:", requestBody);
+    console.log("reviewer:", reviewer);
+    console.log("requestBody:", requestBody);
 
-
-
-
-    // Validate input
-    if (!movieId || !reviewer || !requestBody || !requestBody.reviewText) {
+    // Validate reviewText
+    if (!movieId || !reviewer || !requestBody || !validateReviewText(requestBody.reviewText)) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: "Missing required fields" }),
+        body: JSON.stringify({ message: "Missing required fields or invalid review text(needs more than 20 chars)" }),
       };
     }
 
     const updateCommand = new UpdateCommand({
       TableName: process.env.REVIEWS_TABLE_NAME,
       Key: { movieId, reviewer },
-      UpdateExpression: 'set reviewText = :r', //r being the new text
+      UpdateExpression: 'set reviewText = :r',
       ExpressionAttributeValues: {
         ':r': requestBody.reviewText,
       },
@@ -47,7 +44,6 @@ console.log("requestBody:", requestBody);
 
     const commandOutput = await ddbDocClient.send(updateCommand);
     console.log("UpdateCommand Output:", commandOutput);
-    console.log("updateCommand:", updateCommand);
 
     return {
       statusCode: 200,
