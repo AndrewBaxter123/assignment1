@@ -21,6 +21,12 @@ export class RestAPIStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       tableName: "Reviews",
     });
+
+    reviewsTable.addLocalSecondaryIndex({
+      indexName: "ReviewDateIndex",
+      sortKey: { name: "reviewDate", type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL
+    });
     
 
     
@@ -47,12 +53,12 @@ export class RestAPIStack extends cdk.Stack {
     });
 
     
-    // Functions 
+    // Functions - entry needs to match your newly created file.
 
     const getAllReviewsByReviewerFn = new lambdanode.NodejsFunction(this, 'GetAllReviewsByReviewerFn', {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_16_X,
-      entry: `${__dirname}/../lambdas/GetAllReviewsByReviewer.ts`, // path to your new Lambda file
+      entry: `${__dirname}/../lambdas/GetAllReviewsByReviewer.ts`, 
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
       environment: {
@@ -64,7 +70,7 @@ export class RestAPIStack extends cdk.Stack {
     const updateReviewFn = new lambdanode.NodejsFunction(this, 'UpdateReviewFn', {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_16_X,
-      entry: `${__dirname}/../lambdas/updateReview.ts`, // path to your new Lambda file
+      entry: `${__dirname}/../lambdas/updateReview.ts`, 
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
       environment: {
@@ -76,7 +82,7 @@ export class RestAPIStack extends cdk.Stack {
     const getReviewByReviewerFn = new lambdanode.NodejsFunction(this, "GetReviewByReviewerFn", {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_16_X,
-      entry: `${__dirname}/../lambdas/getReviewByReviewer.ts`, // path to your lambda file
+      entry: `${__dirname}/../lambdas/getReviewByReviewer.ts`,
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
       environment: {
@@ -179,6 +185,7 @@ generalReviewsEndpoint.addMethod("POST", new apig.LambdaIntegration(addMovieRevi
 
     
     // Permissions 
+
     reviewsTable.grantReadData(getAllReviewsByReviewerFn);
     reviewsTable.grantReadData(getReviewByReviewerFn);
     reviewsTable.grantWriteData(addMovieReviewFn);

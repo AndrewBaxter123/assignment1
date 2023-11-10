@@ -1,6 +1,7 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { validateYear } from "../shared/util";
 
 const ddbClient = new DynamoDBClient({ region: process.env.REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
@@ -17,7 +18,6 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
       };
     }
 
-    // Parse movieId to a number.
     const movieId = parseInt(event.pathParameters.movieId);
 
     if (isNaN(movieId)) {
@@ -30,13 +30,37 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
       };
     }
 
+    // validate the year if present
+    const year = event.queryStringParameters?.year;
+    if (year && !validateYear(year)) {
+      return {
+        statusCode: 400,
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ message: "Invalid year format. Expected format: YYYY" }),
+      };
+    }
+
+    let keyConditionExpression = 'movieId = :movieId';
+    let expressionAttributeValues = {
+      ':movieId': movieId,
+    };
+    let indexName: string | undefined = undefined //will only use this when year is provided ?year
+
+    // Modify query if year is provided  -?year
+    if (year) {
+      keyConditionExpression += ' and begins_with(reviewDate, :year)';
+      expressionAttributeValues[':year'] = year;
+      indexName = 'ReviewDateIndex';
+    }
+
     const commandOutput = await ddbDocClient.send(
       new QueryCommand({
         TableName: process.env.REVIEWS_TABLE_NAME,
-        KeyConditionExpression: "movieId = :movieId",
-        ExpressionAttributeValues: {
-          ":movieId": movieId,
-        },
+        IndexName: indexName, // only used if year is provided
+        KeyConditionExpression: keyConditionExpression,
+        ExpressionAttributeValues: expressionAttributeValues,
       })
     );
 
@@ -72,3 +96,4 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
     };
   }
 };
+
