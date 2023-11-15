@@ -17,6 +17,8 @@
     ]
   },
   "context": {
+    "userPoolId": "your-user-pool-id",
+    "userPoolClientId": "your-user-pool-client-id",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [
