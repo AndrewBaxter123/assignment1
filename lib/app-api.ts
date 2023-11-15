@@ -127,6 +127,19 @@ export class AppApi extends Construct {
   
       
       // Functions - entry needs to match your newly created file.
+
+      const deleteReviewFn = new lambdanode.NodejsFunction(this, 'DeleteReviewFn', {
+        architecture: lambda.Architecture.ARM_64,
+        runtime: lambda.Runtime.NODEJS_16_X,
+        entry: `${__dirname}/../lambdas/deleteReview.ts`, 
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 128,
+        environment: {
+          REVIEWS_TABLE_NAME: reviewsTable.tableName,
+          REGION: 'eu-west-1',
+        },
+      });
+      
   
       const getAllReviewsByReviewerFn = new lambdanode.NodejsFunction(this, 'GetAllReviewsByReviewerFn', {
         architecture: lambda.Architecture.ARM_64,
@@ -235,7 +248,6 @@ export class AppApi extends Construct {
     authorizationType: apig.AuthorizationType.CUSTOM,
   });
   
-  
   // '/movies/reviews' 
   const generalReviewsEndpoint = moviesEndpoint.addResource("reviews");
   
@@ -248,6 +260,15 @@ export class AppApi extends Construct {
     authorizer: requestAuthorizer,
     authorizationType: apig.AuthorizationType.CUSTOM,
   });
+
+
+
+// Adding DELETE method to '/movies/{movieId}/reviews/{reviewer}' endpoint
+reviewerReviewsEndpoint.addMethod("DELETE", new apig.LambdaIntegration(deleteReviewFn), {
+  authorizer: requestAuthorizer,
+  authorizationType: apig.AuthorizationType.CUSTOM,
+});
+
   
   
   
@@ -255,6 +276,7 @@ export class AppApi extends Construct {
       
       // Permissions 
   
+      reviewsTable.grantReadWriteData(deleteReviewFn);
       reviewsTable.grantReadData(getAllReviewsByReviewerFn);
       reviewsTable.grantReadData(getReviewByReviewerFn);
       reviewsTable.grantWriteData(addMovieReviewFn);
