@@ -8,10 +8,15 @@ import { Construct } from "constructs";
 import { generateBatch } from "../shared/util";
 import { movies, movieCasts } from "../seed/movies";
 import * as apig from "aws-cdk-lib/aws-apigateway";
+import { UserPool } from "aws-cdk-lib/aws-cognito";
+import * as cognito from 'aws-cdk-lib/aws-cognito';
 
 export class RestAPIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    
+    
 
     // Tables 
     const reviewsTable = new dynamodb.Table(this, "ReviewsTable", {
@@ -181,6 +186,8 @@ reviewerEndpoint.addMethod('GET', new apig.LambdaIntegration(getAllReviewsByRevi
 
 // POST method for adding a new review in general
 generalReviewsEndpoint.addMethod("POST", new apig.LambdaIntegration(addMovieReviewFn, { proxy: true }));
+
+
 
 
     
