@@ -244,7 +244,10 @@ export class AppApi extends Construct {
   reviewerEndpoint.addMethod('GET', new apig.LambdaIntegration(getAllReviewsByReviewerFn, {proxy: true}));
   
   // POST method for adding a new review in general
-  generalReviewsEndpoint.addMethod("POST", new apig.LambdaIntegration(addMovieReviewFn, { proxy: true }));
+  generalReviewsEndpoint.addMethod("POST", new apig.LambdaIntegration(addMovieReviewFn, { proxy: true }), {
+    authorizer: requestAuthorizer,
+    authorizationType: apig.AuthorizationType.CUSTOM,
+  });
   
   
   
