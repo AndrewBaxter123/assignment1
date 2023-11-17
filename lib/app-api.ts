@@ -8,6 +8,8 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambdanode from "aws-cdk-lib/aws-lambda-nodejs";
 import { generateBatch } from "../shared/util";
 import { movies, movieCasts } from "../seed/movies";
+import * as iam from 'aws-cdk-lib/aws-iam';
+
 
 type AppApiProps = {
   userPoolId: string;
@@ -127,6 +129,18 @@ export class AppApi extends Construct {
   
       
       // Functions - entry needs to match your newly created file.
+
+      const translateReviewFn = new lambdanode.NodejsFunction(this, 'TranslateReviewFn', {
+        architecture: lambda.Architecture.ARM_64,
+        runtime: lambda.Runtime.NODEJS_16_X,
+        entry: `${__dirname}/../lambdas/translate.ts`, // path to your Lambda file
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 128,
+        environment: {
+            REVIEWS_TABLE_NAME: reviewsTable.tableName,
+            REGION: 'eu-west-1',
+        },
+    });
 
       const deleteReviewFn = new lambdanode.NodejsFunction(this, 'DeleteReviewFn', {
         architecture: lambda.Architecture.ARM_64,
@@ -261,27 +275,34 @@ export class AppApi extends Construct {
     authorizationType: apig.AuthorizationType.CUSTOM,
   });
 
-
-
 // Adding DELETE method to '/movies/{movieId}/reviews/{reviewer}' endpoint
 reviewerReviewsEndpoint.addMethod("DELETE", new apig.LambdaIntegration(deleteReviewFn), {
   authorizer: requestAuthorizer,
   authorizationType: apig.AuthorizationType.CUSTOM,
 });
+// '/movies/{movieId}/reviews/{reviewer}/translation' endpoint
+const translationEndpoint = reviewerReviewsEndpoint.addResource("translation");
+
+// GET method to translate a review for a specific movie by a specific reviewer
+translationEndpoint.addMethod("GET", new apig.LambdaIntegration(translateReviewFn, { proxy: true }));
 
   
   
   
-  
       
-      // Permissions 
-  
+      // Permissions
+      reviewsTable.grantReadData(translateReviewFn);
       reviewsTable.grantReadWriteData(deleteReviewFn);
       reviewsTable.grantReadData(getAllReviewsByReviewerFn);
       reviewsTable.grantReadData(getReviewByReviewerFn);
       reviewsTable.grantWriteData(addMovieReviewFn);
       reviewsTable.grantReadData(getMovieReviewsFn)
       reviewsTable.grantWriteData(updateReviewFn);
+
+      translateReviewFn.addToRolePolicy(new iam.PolicyStatement({
+        actions: ['translate:TranslateText'],
+        resources: ['*'], 
+    }));
   
         }
 
