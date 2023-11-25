@@ -2,6 +2,7 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, DeleteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { validateMovieId, validateReviewer } from "../shared/util";
 
 const ddbDocClient = createDDbDocClient();
 
@@ -12,7 +13,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     const movieId = parameters?.movieId ? parseInt(parameters.movieId) : undefined;
     const reviewer = parameters?.reviewer;
 
-    if (!movieId || !reviewer) {
+    if (movieId === undefined || reviewer === undefined || !validateMovieId(movieId) || !validateReviewer(reviewer)) {
       return {
         statusCode: 400,
         body: JSON.stringify({ message: "Missing movieId or reviewer in path parameters" }),

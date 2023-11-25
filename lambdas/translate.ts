@@ -2,6 +2,7 @@ import { APIGatewayProxyHandler } from 'aws-lambda';
 import 'source-map-support/register';
 import apiResponses from './common/apiResponses';
 import * as AWS from 'aws-sdk';
+import { validateMovieId, validateReviewer } from '../shared/util';
 
 
 const translate = new AWS.Translate();
@@ -12,12 +13,11 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     try {
         const reviewer = event.pathParameters?.reviewer;
         const language = event.queryStringParameters?.language;
-
         const movieIdStr = event.pathParameters?.movieId ?? '';
-        const movieId = parseInt(movieIdStr, 10);
+        const movieId = parseInt(movieIdStr);
         
-        if (isNaN(movieId)) {
-            // Handle the error appropriately
+        if (!movieId || !validateMovieId(movieId) || !reviewer || !validateReviewer(reviewer) || !language) {
+            
             console.error('movieId is not a number:', movieIdStr);
             return apiResponses._400({ message: 'movieId must be a number' });
         }

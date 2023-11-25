@@ -1,6 +1,7 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { validateMovieId, validateReviewer } from "../shared/util";
 
 const ddbDocClient = createDDbDocClient();
 
@@ -9,13 +10,14 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   
     try {
 
-      const movieId = event.pathParameters?.movieId;
+      const movieIdParam = event.pathParameters?.movieId;
       const reviewer = event.pathParameters?.reviewer;
   
-      console.log('Movie ID:', movieId);
+      console.log('Movie ID:', movieIdParam);
       console.log('Reviewer:', reviewer);
-  
-      if (!movieId || !reviewer) {
+
+      const movieId = movieIdParam ? parseInt(movieIdParam) : undefined;
+      if (movieId === undefined || reviewer === undefined || !validateMovieId(movieId) || !validateReviewer(reviewer)) {
         return {
           statusCode: 400,
           body: JSON.stringify({ message: "movieId and reviewer are required." }),
@@ -30,7 +32,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         TableName: process.env.REVIEWS_TABLE_NAME,
         KeyConditionExpression: 'movieId = :movieId and reviewer = :reviewer',
         ExpressionAttributeValues: {
-          ':movieId': parseInt(movieId), 
+          ':movieId': movieId, 
           ':reviewer': reviewer,
         },
       });

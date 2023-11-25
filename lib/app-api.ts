@@ -85,7 +85,9 @@ export class AppApi extends Construct {
 
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
   
-      
+// Above this is Auth specific ^
+// ====================================
+// Below is code merged from rest API
       
   
       // Tables 
@@ -103,30 +105,13 @@ export class AppApi extends Construct {
         projectionType: dynamodb.ProjectionType.ALL
       });
       
-  
-      
-      
-  
       const moviesTable = new dynamodb.Table(this, "MoviesTable", {
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         partitionKey: { name: "movieId", type: dynamodb.AttributeType.NUMBER },
         removalPolicy: cdk.RemovalPolicy.DESTROY,
         tableName: "Movies",
       });
-  
-      const movieCastsTable = new dynamodb.Table(this, "MovieCastTable", {
-        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        partitionKey: { name: "movieId", type: dynamodb.AttributeType.NUMBER },
-        sortKey: { name: "actorName", type: dynamodb.AttributeType.STRING },
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        tableName: "MovieCast",
-      });
-  
-      movieCastsTable.addLocalSecondaryIndex({
-        indexName: "roleIx",
-        sortKey: { name: "roleName", type: dynamodb.AttributeType.STRING },
-      });
-  
+
       
       // Functions - entry needs to match your newly created file.
 
@@ -224,13 +209,12 @@ export class AppApi extends Construct {
               parameters: {
                 RequestItems: {
                   [moviesTable.tableName]: generateBatch(movies),
-                  [movieCastsTable.tableName]: generateBatch(movieCasts),  // Added
                 },
               },
               physicalResourceId: custom.PhysicalResourceId.of("moviesddbInitData"), //.of(Date.now().toString()),
             },
             policy: custom.AwsCustomResourcePolicy.fromSdkCalls({
-              resources: [moviesTable.tableArn, movieCastsTable.tableArn],  // Includes movie cast
+              resources: [moviesTable.tableArn], 
             }),
           });
           
@@ -297,7 +281,7 @@ translationEndpoint.addMethod("GET", new apig.LambdaIntegration(translateReviewF
       reviewsTable.grantReadData(getReviewByReviewerFn);
       reviewsTable.grantWriteData(addMovieReviewFn);
       reviewsTable.grantReadData(getMovieReviewsFn)
-      reviewsTable.grantWriteData(updateReviewFn);
+      reviewsTable.grantReadWriteData(updateReviewFn);
 
       translateReviewFn.addToRolePolicy(new iam.PolicyStatement({
         actions: ['translate:TranslateText'],

@@ -37,12 +37,12 @@ export const validateReviewDate = (reviewDate: string): boolean => {
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   return dateRegex.test(reviewDate);
 };
-
+//needed for year to work
 export const validateYear = (year: string): boolean => {
   return /^\d{4}$/.test(year);
 };
 
-
+//making it easier to validate addReview
 export const validateReview = (review: Review): boolean => {
   return validateMovieId(review.movieId) &&
          validateReviewer(review.reviewer) &&

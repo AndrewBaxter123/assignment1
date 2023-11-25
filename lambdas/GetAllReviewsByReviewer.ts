@@ -1,6 +1,7 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { validateReviewer } from "../shared/util";
 
 const ddbDocClient = createDDbDocClient();
 
@@ -8,13 +9,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
   try {
     const reviewer = event.pathParameters?.reviewer;
 
-    if (!reviewer) {
+    if (!reviewer || !validateReviewer(reviewer)) {
       return {
         statusCode: 400,
         headers: {
           "content-type": "application/json",
         },
-        body: JSON.stringify({ Message: "reviewer is required." }),
+        body: JSON.stringify({ Message: "reviewer is required or it's input is invalid." }),
       };
     }
 

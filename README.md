@@ -1,4 +1,4 @@
-## ServerlessREST Sddignment - Distributed Systems.
+## ServerlessREST assignment - Distributed Systems.
 
 __Name:__ Andrew Baxter
 
@@ -7,7 +7,6 @@ This repository contains the implementation of a serverless REST API for the AWS
 ### API endpoints.
 
 [ Provide a bullet-point list of the app's endpoints (excluding the Auth API endpoints).]
-e.g.
 
 The following are protected routes that require a jwt
 + POST {{baseURL}}/movies/reviews - adds a review
@@ -26,7 +25,7 @@ the following are unprotected routes
 
 [Include screenshots from the AWS console (API Gateway service) that clearly show the deployed API ( have legible font size). ]
 
-![](images/api1.png)
+![](/images/api1.png)
 
 ![](/images/api2.png)
 
@@ -39,6 +38,8 @@ the following are unprotected routes
 ![](/images/userpool.png)
 
 ### Independent learning (If relevant).
+
+Amazon Documentation used where errors where encountered.
 
 
 
