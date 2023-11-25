@@ -26,20 +26,19 @@ the following are unprotected routes
 
 [Include screenshots from the AWS console (API Gateway service) that clearly show the deployed API ( have legible font size). ]
 
-![](./images/api1.png)
+![](images/api1.png)
 
-![](./images/api2.png)
+![](/images/api2.png)
 
-![](./images/api3.png)
+![](/images/api3.png)
 
 ### Authentication..
 
 [Include a screenshot from the AWS console (Cognito User Pools) showing a confirmed user account.]
 
-![](/./images/userpool.png)
+![](/images/userpool.png)
 
 ### Independent learning (If relevant).
 
-[ I couldn't get the year working as intended so I done i
-State any other evidence of independent learning achieved while completing this assignment.
+
 
